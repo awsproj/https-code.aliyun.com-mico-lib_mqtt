@@ -114,7 +114,7 @@ static IoT_Error_t _mqtt_deserialize_unsuback(uint16_t *pPacketId, unsigned char
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
-static IoT_Error_t _mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter,
+static IoT_Error_t _mqtt_internal_unsubscribe(MQTT_Client *pClient, const char *pTopicFilter,
 													  uint16_t topicFilterLen) {
 	/* No NULL checks because this is a static internal function */
 
@@ -194,7 +194,7 @@ static IoT_Error_t _mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, const cha
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
-IoT_Error_t mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen) {
+IoT_Error_t mqtt_unsubscribe(MQTT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen) {
 	IoT_Error_t rc, unsubRc;
 	ClientState clientState;
 

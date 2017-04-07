@@ -47,7 +47,7 @@ extern "C" {
 
 #define MAX_PACKET_ID 65535
 
-typedef struct _Client AWS_IoT_Client;
+typedef struct _Client MQTT_Client;
 
 /**
  * @brief Quality of Service Type
@@ -137,7 +137,7 @@ extern const IoT_Client_Connect_Params iotClientConnectParamsDefault;
  * Defining a TYPE for definition of disconnect callback function pointers.
  *
  */
-typedef void (*iot_disconnect_handler)(AWS_IoT_Client *, void *);
+typedef void (*iot_disconnect_handler)(MQTT_Client *, void *);
 
 /**
  * @brief MQTT Initialization Parameters
@@ -203,7 +203,7 @@ typedef enum _ClientState {
  * Used to send incoming data to the application
  *
  */
-typedef void (*pApplicationHandler_t)(AWS_IoT_Client *pClient, char *pTopicName, uint16_t topicNameLen,
+typedef void (*pApplicationHandler_t)(MQTT_Client *pClient, char *pTopicName, uint16_t topicNameLen,
 									  IoT_Publish_Message_Params *pParams, void *pClientData);
 
 /**
@@ -299,7 +299,7 @@ struct _Client {
  *
  * @return next packet id as a 16 bit unsigned integer
  */
-uint16_t mqtt_get_next_packet_id(AWS_IoT_Client *pClient);
+uint16_t mqtt_get_next_packet_id(MQTT_Client *pClient);
 
 /**
  * @brief Set the connection parameters for the IoT Client
@@ -313,7 +313,7 @@ uint16_t mqtt_get_next_packet_id(AWS_IoT_Client *pClient);
  *
  * @return IoT_Error_t Type defining successful/failed API call
  */
-IoT_Error_t mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pNewConnectParams);
+IoT_Error_t mqtt_set_connect_params(MQTT_Client *pClient, IoT_Client_Connect_Params *pNewConnectParams);
 
 /**
  * @brief Is the MQTT client currently connected?
@@ -325,7 +325,7 @@ IoT_Error_t mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_Connect_
  *
  * @return true = connected, false = not currently connected
  */
-bool mqtt_is_client_connected(AWS_IoT_Client *pClient);
+bool mqtt_is_client_connected(MQTT_Client *pClient);
 
 /**
  * @brief Get the current state of the client
@@ -336,7 +336,7 @@ bool mqtt_is_client_connected(AWS_IoT_Client *pClient);
  *
  * @return ClientState value equal to the current state of the client
  */
-ClientState mqtt_get_client_state(AWS_IoT_Client *pClient);
+ClientState mqtt_get_client_state(MQTT_Client *pClient);
 
 /**
  * @brief Is the MQTT client set to reconnect automatically?
@@ -348,7 +348,7 @@ ClientState mqtt_get_client_state(AWS_IoT_Client *pClient);
  *
  * @return true = enabled, false = disabled
  */
-bool mqtt_is_autoreconnect_enabled(AWS_IoT_Client *pClient);
+bool mqtt_is_autoreconnect_enabled(MQTT_Client *pClient);
 
 /**
  * @brief Set the IoT Client disconnect handler
@@ -362,7 +362,7 @@ bool mqtt_is_autoreconnect_enabled(AWS_IoT_Client *pClient);
  *
  * @return IoT_Error_t Type defining successful/failed API call
  */
-IoT_Error_t mqtt_set_disconnect_handler(AWS_IoT_Client *pClient, iot_disconnect_handler pDisconnectHandler,
+IoT_Error_t mqtt_set_disconnect_handler(MQTT_Client *pClient, iot_disconnect_handler pDisconnectHandler,
 												void *pDisconnectHandlerData);
 
 /**
@@ -375,7 +375,7 @@ IoT_Error_t mqtt_set_disconnect_handler(AWS_IoT_Client *pClient, iot_disconnect_
  *
  * @return IoT_Error_t Type defining successful/failed API call
  */
-IoT_Error_t mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool newStatus);
+IoT_Error_t mqtt_autoreconnect_set_status(MQTT_Client *pClient, bool newStatus);
 
 /**
  * @brief Get count of Network Disconnects
@@ -386,7 +386,7 @@ IoT_Error_t mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool newStatu
  *
  * @return uint32_t the disconnect count
  */
-uint32_t mqtt_get_network_disconnected_count(AWS_IoT_Client *pClient);
+uint32_t mqtt_get_network_disconnected_count(MQTT_Client *pClient);
 
 /**
  * @brief Reset Network Disconnect conter
@@ -395,7 +395,7 @@ uint32_t mqtt_get_network_disconnected_count(AWS_IoT_Client *pClient);
  *
  * @param pClient Reference to the IoT Client
  */
-void mqtt_reset_network_disconnected_count(AWS_IoT_Client *pClient);
+void mqtt_reset_network_disconnected_count(MQTT_Client *pClient);
 
 #ifdef __cplusplus
 }

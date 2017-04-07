@@ -358,7 +358,7 @@ static bool _mqtt_is_client_state_valid_for_connect(ClientState clientState) {
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-static IoT_Error_t _mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
+static IoT_Error_t _mqtt_internal_connect(MQTT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
 	Timer connect_timer;
 	IoT_Error_t connack_rc = FAILURE;
 	char sessionPresent = 0;
@@ -432,7 +432,7 @@ static IoT_Error_t _mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_Client_Co
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
+IoT_Error_t mqtt_connect(MQTT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
 	IoT_Error_t rc;
 	ClientState clientState;
 
@@ -476,7 +476,7 @@ IoT_Error_t mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pCo
  *
  * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
  */
-IoT_Error_t _mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
+IoT_Error_t _mqtt_internal_disconnect(MQTT_Client *pClient) {
 	/* We might wait for incomplete incoming publishes to complete */
 	Timer timer;
 	size_t serialized_len = 0;
@@ -524,7 +524,7 @@ IoT_Error_t _mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
  *
  * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
  */
-IoT_Error_t mqtt_disconnect(AWS_IoT_Client *pClient) {
+IoT_Error_t mqtt_disconnect(MQTT_Client *pClient) {
 	ClientState clientState;
 	IoT_Error_t rc;
 
@@ -570,7 +570,7 @@ IoT_Error_t mqtt_disconnect(AWS_IoT_Client *pClient) {
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
+IoT_Error_t mqtt_attempt_reconnect(MQTT_Client *pClient) {
 	IoT_Error_t rc;
 
 	FUNC_ENTRY;

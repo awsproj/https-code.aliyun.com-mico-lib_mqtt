@@ -52,7 +52,7 @@ extern "C" {
  *
  * @return IoT_Error_t Type defining successful/failed API call
  */
-IoT_Error_t mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams);
+IoT_Error_t mqtt_init(MQTT_Client *pClient, IoT_Client_Init_Params *pInitParams);
 
 /**
  * @brief MQTT Connection Function
@@ -64,7 +64,7 @@ IoT_Error_t mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitPara
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams);
+IoT_Error_t mqtt_connect(MQTT_Client *pClient, IoT_Client_Connect_Params *pConnectParams);
 
 /**
  * @brief Publish an MQTT message on a topic
@@ -81,7 +81,7 @@ IoT_Error_t mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pCo
  *
  * @return An IoT Error Type defining successful/failed publish
  */
-IoT_Error_t mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+IoT_Error_t mqtt_publish(MQTT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								 IoT_Publish_Message_Params *pParams);
 
 /**
@@ -99,7 +99,7 @@ IoT_Error_t mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+IoT_Error_t mqtt_subscribe(MQTT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								   QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData);
 
 /**
@@ -114,7 +114,7 @@ IoT_Error_t mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t mqtt_resubscribe(AWS_IoT_Client *pClient);
+IoT_Error_t mqtt_resubscribe(MQTT_Client *pClient);
 
 /**
  * @brief Unsubscribe to an MQTT topic.
@@ -129,7 +129,7 @@ IoT_Error_t mqtt_resubscribe(AWS_IoT_Client *pClient);
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
-IoT_Error_t mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen);
+IoT_Error_t mqtt_unsubscribe(MQTT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen);
 
 /**
  * @brief Disconnect an MQTT Connection
@@ -140,7 +140,7 @@ IoT_Error_t mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, 
  *
  * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
  */
-IoT_Error_t mqtt_disconnect(AWS_IoT_Client *pClient);
+IoT_Error_t mqtt_disconnect(MQTT_Client *pClient);
 
 /**
  * @brief Yield to the MQTT client
@@ -159,7 +159,7 @@ IoT_Error_t mqtt_disconnect(AWS_IoT_Client *pClient);
  *         If this call results in an error it is likely the MQTT connection has dropped.
  *         iot_is_mqtt_connected can be called to confirm.
  */
-IoT_Error_t mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
+IoT_Error_t mqtt_yield(MQTT_Client *pClient, uint32_t timeout_ms);
 
 /**
  * @brief MQTT Manual Re-Connection Function
@@ -174,7 +174,7 @@ IoT_Error_t mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t mqtt_attempt_reconnect(AWS_IoT_Client *pClient);
+IoT_Error_t mqtt_attempt_reconnect(MQTT_Client *pClient);
 
 #ifdef __cplusplus
 }

@@ -28,13 +28,13 @@ extern "C" {
 /**
   * This is for the case when the mqtt_internal_send_packet Fails.
   */
-static void _mqtt_force_client_disconnect(AWS_IoT_Client *pClient) {
+static void _mqtt_force_client_disconnect(MQTT_Client *pClient) {
 	pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
 	pClient->networkStack.disconnect(&(pClient->networkStack));
 	pClient->networkStack.destroy(&(pClient->networkStack));
 }
 
-static IoT_Error_t _mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
+static IoT_Error_t _mqtt_handle_disconnect(MQTT_Client *pClient) {
 	IoT_Error_t rc;
 
 	FUNC_ENTRY;
@@ -55,7 +55,7 @@ static IoT_Error_t _mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
 }
 
 
-static IoT_Error_t _mqtt_handle_reconnect(AWS_IoT_Client *pClient) {
+static IoT_Error_t _mqtt_handle_reconnect(MQTT_Client *pClient) {
 	IoT_Error_t rc;
 
 	FUNC_ENTRY;
@@ -92,7 +92,7 @@ static IoT_Error_t _mqtt_handle_reconnect(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(rc);
 }
 
-static IoT_Error_t _mqtt_keep_alive(AWS_IoT_Client *pClient) {
+static IoT_Error_t _mqtt_keep_alive(MQTT_Client *pClient) {
 	IoT_Error_t rc = SUCCESS;
 	Timer timer;
 	size_t serialized_len;
@@ -161,7 +161,7 @@ static IoT_Error_t _mqtt_keep_alive(AWS_IoT_Client *pClient) {
  *         If this call results in an error it is likely the MQTT connection has dropped.
  *         iot_is_mqtt_connected can be called to confirm.
  */
-static IoT_Error_t _mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
+static IoT_Error_t _mqtt_internal_yield(MQTT_Client *pClient, uint32_t timeout_ms) {
 	IoT_Error_t yieldRc = SUCCESS;
 
 	uint8_t packet_type;
@@ -242,7 +242,7 @@ static IoT_Error_t _mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_t timeou
  *         If this call results in an error it is likely the MQTT connection has dropped.
  *         iot_is_mqtt_connected can be called to confirm.
  */
-IoT_Error_t mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
+IoT_Error_t mqtt_yield(MQTT_Client *pClient, uint32_t timeout_ms) {
 	IoT_Error_t rc, yieldRc;
 	ClientState clientState;
 

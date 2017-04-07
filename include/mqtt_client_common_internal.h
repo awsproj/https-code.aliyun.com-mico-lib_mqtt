@@ -97,9 +97,9 @@ unsigned char mqtt_internal_read_char(unsigned char **pptr);
 void mqtt_internal_write_char(unsigned char **pptr, unsigned char c);
 void mqtt_internal_write_utf8_string(unsigned char **pptr, const char *string, uint16_t stringLen);
 
-IoT_Error_t mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Timer *pTimer);
-IoT_Error_t mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTimer, uint8_t *pPacketType);
-IoT_Error_t mqtt_internal_wait_for_read(AWS_IoT_Client *pClient, uint8_t packetType, Timer *pTimer);
+IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer *pTimer);
+IoT_Error_t mqtt_internal_cycle_read(MQTT_Client *pClient, Timer *pTimer, uint8_t *pPacketType);
+IoT_Error_t mqtt_internal_wait_for_read(MQTT_Client *pClient, uint8_t packetType, Timer *pTimer);
 IoT_Error_t mqtt_internal_serialize_zero(unsigned char *pTxBuf, size_t txBufLen,
 												 MessageTypes packetType, size_t *pSerializedLength);
 IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
@@ -108,14 +108,14 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 													  unsigned char **payload, size_t *payloadLen,
 													  unsigned char *pRxBuf, size_t rxBufLen);
 
-IoT_Error_t mqtt_set_client_state(AWS_IoT_Client *pClient, ClientState expectedCurrentState,
+IoT_Error_t mqtt_set_client_state(MQTT_Client *pClient, ClientState expectedCurrentState,
 										  ClientState newState);
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 
-IoT_Error_t mqtt_client_lock_mutex(AWS_IoT_Client *pClient, IoT_Mutex_t *pMutex);
+IoT_Error_t mqtt_client_lock_mutex(MQTT_Client *pClient, IoT_Mutex_t *pMutex);
 
-IoT_Error_t mqtt_client_unlock_mutex(AWS_IoT_Client *pClient, IoT_Mutex_t *pMutex);
+IoT_Error_t mqtt_client_unlock_mutex(MQTT_Client *pClient, IoT_Mutex_t *pMutex);
 
 #endif
 

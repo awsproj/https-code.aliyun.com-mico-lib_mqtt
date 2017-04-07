@@ -178,7 +178,7 @@ IoT_Error_t mqtt_internal_serialize_ack(unsigned char *pTxBuf, size_t txBufLen,
  *
  * @return An IoT Error Type defining successful/failed publish
  */
-static IoT_Error_t _mqtt_internal_publish(AWS_IoT_Client *pClient, const char *pTopicName,
+static IoT_Error_t _mqtt_internal_publish(MQTT_Client *pClient, const char *pTopicName,
 												  uint16_t topicNameLen, IoT_Publish_Message_Params *pParams) {
 	Timer timer;
 	uint32_t len = 0;
@@ -243,7 +243,7 @@ static IoT_Error_t _mqtt_internal_publish(AWS_IoT_Client *pClient, const char *p
  *
  * @return An IoT Error Type defining successful/failed publish
  */
-IoT_Error_t mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+IoT_Error_t mqtt_publish(MQTT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								 IoT_Publish_Message_Params *pParams) {
 	IoT_Error_t rc, pubRc;
 	ClientState clientState;

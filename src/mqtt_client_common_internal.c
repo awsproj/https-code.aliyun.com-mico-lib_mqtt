@@ -248,7 +248,7 @@ IoT_Error_t mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes message_
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-IoT_Error_t mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Timer *pTimer) {
+IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer *pTimer) {
 
 	size_t sentLen, sent;
 	IoT_Error_t rc;
@@ -299,7 +299,7 @@ IoT_Error_t mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Ti
 	FUNC_EXIT_RC(FAILURE);
 }
 
-static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(AWS_IoT_Client *pClient,
+static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(MQTT_Client *pClient,
 																	  size_t *rem_len, Timer *pTimer) {
 	unsigned char encodedByte;
 	size_t multiplier, len;
@@ -329,7 +329,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(AWS_IoT_Cl
 	FUNC_EXIT_RC(rc);
 }
 
-static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, Timer *pTimer, uint8_t *pPacketType) {
+static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Timer *pTimer, uint8_t *pPacketType) {
 	size_t len, rem_len, total_bytes_read, bytes_to_be_read, read_len;
 	IoT_Error_t rc;
 	MQTTHeader header = {0};
@@ -440,7 +440,7 @@ static char _aws_iot_mqtt_internal_is_topic_matched(char *pTopicFilter, char *pT
 	return (curn == curn_end) && (*curf == '\0');
 }
 
-static IoT_Error_t _aws_iot_mqtt_internal_deliver_message(AWS_IoT_Client *pClient, char *pTopicName,
+static IoT_Error_t _aws_iot_mqtt_internal_deliver_message(MQTT_Client *pClient, char *pTopicName,
 														  uint16_t topicNameLen,
 														  IoT_Publish_Message_Params *pMessageParams) {
 	uint32_t itr;
@@ -480,7 +480,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_deliver_message(AWS_IoT_Client *pClien
 	FUNC_EXIT_RC(rc);
 }
 
-static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(AWS_IoT_Client *pClient, Timer *pTimer) {
+static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(MQTT_Client *pClient, Timer *pTimer) {
 	char *topicName;
 	uint16_t topicNameLen;
 	uint32_t len;
@@ -529,7 +529,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(AWS_IoT_Client *pClient
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-IoT_Error_t mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTimer, uint8_t *pPacketType) {
+IoT_Error_t mqtt_internal_cycle_read(MQTT_Client *pClient, Timer *pTimer, uint8_t *pPacketType) {
 	IoT_Error_t rc;
 
 #ifdef _ENABLE_THREAD_SUPPORT_
@@ -596,7 +596,7 @@ IoT_Error_t mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTimer, uin
 }
 
 /* only used in single-threaded mode where one command at a time is in process */
-IoT_Error_t mqtt_internal_wait_for_read(AWS_IoT_Client *pClient, uint8_t packetType, Timer *pTimer) {
+IoT_Error_t mqtt_internal_wait_for_read(MQTT_Client *pClient, uint8_t packetType, Timer *pTimer) {
 	IoT_Error_t rc;
 	uint8_t read_packet_type;
 

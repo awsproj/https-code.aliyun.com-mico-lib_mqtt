@@ -154,7 +154,7 @@ static IoT_Error_t _mqtt_deserialize_suback(uint16_t *pPacketId, uint32_t maxExp
 }
 
 /* Returns MAX_MESSAGE_HANDLERS value if no free index is available */
-static uint32_t _mqtt_get_free_message_handler_index(AWS_IoT_Client *pClient) {
+static uint32_t _mqtt_get_free_message_handler_index(MQTT_Client *pClient) {
 	uint32_t itr;
 
 	FUNC_ENTRY;
@@ -184,7 +184,7 @@ static uint32_t _mqtt_get_free_message_handler_index(AWS_IoT_Client *pClient) {
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-static IoT_Error_t _mqtt_internal_subscribe(AWS_IoT_Client *pClient, const char *pTopicName,
+static IoT_Error_t _mqtt_internal_subscribe(MQTT_Client *pClient, const char *pTopicName,
 													uint16_t topicNameLen, QoS qos,
 													pApplicationHandler_t pApplicationHandler,
 													void *pApplicationHandlerData) {
@@ -269,7 +269,7 @@ static IoT_Error_t _mqtt_internal_subscribe(AWS_IoT_Client *pClient, const char 
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+IoT_Error_t mqtt_subscribe(MQTT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								   QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData) {
 	ClientState clientState;
 	IoT_Error_t rc, subRc;
@@ -318,7 +318,7 @@ IoT_Error_t mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-static IoT_Error_t _mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
+static IoT_Error_t _mqtt_internal_resubscribe(MQTT_Client *pClient) {
 	uint16_t packetId;
 	uint32_t len, count, existingSubCount, itr;
 	IoT_Error_t rc;
@@ -381,7 +381,7 @@ static IoT_Error_t _mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t mqtt_resubscribe(AWS_IoT_Client *pClient) {
+IoT_Error_t mqtt_resubscribe(MQTT_Client *pClient) {
 	IoT_Error_t rc, resubRc;
 
 	FUNC_ENTRY;
