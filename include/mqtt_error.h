@@ -36,9 +36,9 @@ typedef enum {
 	/** Returned when a connection request is successful and packet response is connection accepted */
 			MQTT_CONNACK_CONNECTION_ACCEPTED = 1,
 	/** Success return value - no error occurred */
-			SUCCESS = 0,
+			MQTT_SUCCESS = 0,
 	/** A generic error. Not enough information for a specific error code */
-			FAILURE = -1,
+			MQTT_FAILURE = -1,
 	/** A required parameter was passed as null */
 			NULL_VALUE_ERROR = -2,
 	/** The TCP socket could not be established */

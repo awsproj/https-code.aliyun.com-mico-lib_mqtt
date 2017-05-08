@@ -84,7 +84,7 @@ IoT_Error_t mqtt_internal_decode_remaining_length_from_buffer(unsigned char *buf
 
 	*readBytesLen = len;
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 uint32_t mqtt_internal_get_final_packet_length_from_remaining_length(uint32_t rem_len) {
@@ -181,7 +181,7 @@ IoT_Error_t mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes message_
 	switch(message_type) {
 		case UNKNOWN:
 			/* Should never happen */
-			return FAILURE;
+			return MQTT_FAILURE;
 		case CONNECT:
 			pHeader->bits.type = 0x01;
 			break;
@@ -226,7 +226,7 @@ IoT_Error_t mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes message_
 			break;
 		default:
 			/* Should never happen */
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	pHeader->bits.dup = (1 == dup) ? 0x01 : 0x00;
@@ -245,7 +245,7 @@ IoT_Error_t mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes message_
 
 	pHeader->bits.retain = (1 == retained) ? 0x01 : 0x00;
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer *pTimer) {
@@ -265,7 +265,7 @@ IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	rc = mqtt_client_lock_mutex(pClient, &(pClient->clientData.tls_write_mutex));
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 #endif
@@ -276,7 +276,7 @@ IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer
 	while(sent < length && !has_timer_expired(pTimer)) {
 		rc = pClient->networkStack.write(&(pClient->networkStack), &pClient->clientData.writeBuf[sent], length, pTimer,
 										 &sentLen);
-		if(SUCCESS != rc) {
+		if(MQTT_SUCCESS != rc) {
 			/* there was an error writing the data */
 			break;
 		}
@@ -285,7 +285,7 @@ IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	rc = mqtt_client_unlock_mutex(pClient, &(pClient->clientData.tls_write_mutex));
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 #endif
@@ -293,10 +293,10 @@ IoT_Error_t mqtt_internal_send_packet(MQTT_Client *pClient, size_t length, Timer
 	if(sent == length) {
 		/* record the fact that we have successfully sent the packet */
 		//countdown_sec(&c->pingTimer, c->clientData.keepAliveInterval);
-		FUNC_EXIT_RC(SUCCESS);
+		FUNC_EXIT_RC(MQTT_SUCCESS);
 	}
 
-	FUNC_EXIT_RC(FAILURE);
+	FUNC_EXIT_RC(MQTT_FAILURE);
 }
 
 static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(MQTT_Client *pClient,
@@ -318,7 +318,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(MQTT_Clien
 		}
 
 		rc = pClient->networkStack.read(&(pClient->networkStack), &encodedByte, 1, pTimer, &len);
-		if(SUCCESS != rc) {
+		if(MQTT_SUCCESS != rc) {
 			FUNC_EXIT_RC(rc);
 		}
 
@@ -347,7 +347,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Time
 	/* 1. read the header byte.  This has the packet type in it */
 	if(NETWORK_SSL_NOTHING_TO_READ == rc) {
 		return MQTT_NOTHING_TO_READ;
-	} else if(SUCCESS != rc) {
+	} else if(MQTT_SUCCESS != rc) {
 		return rc;
 	}
 
@@ -361,7 +361,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Time
 
 	/* 2. read the remaining length.  This is variable in itself */
 	rc = _aws_iot_mqtt_internal_decode_packet_remaining_len(pClient, &rem_len, pTimer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		return rc;
 	}
 
@@ -371,7 +371,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Time
 		do {
 			rc = pClient->networkStack.read(&(pClient->networkStack), pClient->clientData.readBuf, bytes_to_be_read,
 											pTimer, &read_len);
-			if(SUCCESS == rc) {
+			if(MQTT_SUCCESS == rc) {
 				total_bytes_read += read_len;
 				if((rem_len - total_bytes_read) >= pClient->clientData.readBufSize) {
 					bytes_to_be_read = pClient->clientData.readBufSize;
@@ -379,7 +379,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Time
 					bytes_to_be_read = rem_len - total_bytes_read;
 				}
 			}
-		} while(total_bytes_read < rem_len && SUCCESS == rc);
+		} while(total_bytes_read < rem_len && MQTT_SUCCESS == rc);
 		return MQTT_RX_BUFFER_TOO_SHORT_ERROR;
 	}
 
@@ -390,8 +390,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Time
 	if(rem_len > 0) {
 		rc = pClient->networkStack.read(&(pClient->networkStack), pClient->clientData.readBuf + len, rem_len, pTimer,
 										&read_len);
-		if(SUCCESS != rc || read_len != rem_len) {
-			return FAILURE;
+		if(MQTT_SUCCESS != rc || read_len != rem_len) {
+			return MQTT_FAILURE;
 		}
 	}
 
@@ -499,34 +499,34 @@ static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(MQTT_Client *pClient, T
 												   pClient->clientData.readBuf,
 												   pClient->clientData.readBufSize);
 
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	rc = _aws_iot_mqtt_internal_deliver_message(pClient, topicName, topicNameLen, &msg);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	if(QOS0 == msg.qos) {
 		/* No further processing required for QoS0 */
-		FUNC_EXIT_RC(SUCCESS);
+		FUNC_EXIT_RC(MQTT_SUCCESS);
 	}
 
 	/* Message assumed to be QoS1 since we do not support QoS2 at this time */
 	rc = mqtt_internal_serialize_ack(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
 											 PUBACK, 0, msg.id, &len);
 
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	rc = mqtt_internal_send_packet(pClient, len, pTimer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 IoT_Error_t mqtt_internal_cycle_read(MQTT_Client *pClient, Timer *pTimer, uint8_t *pPacketType) {
@@ -542,7 +542,7 @@ IoT_Error_t mqtt_internal_cycle_read(MQTT_Client *pClient, Timer *pTimer, uint8_
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	threadRc = mqtt_client_lock_mutex(pClient, &(pClient->clientData.tls_read_mutex));
-	if(SUCCESS != threadRc) {
+	if(MQTT_SUCCESS != threadRc) {
 		FUNC_EXIT_RC(threadRc);
 	}
 #endif
@@ -552,15 +552,15 @@ IoT_Error_t mqtt_internal_cycle_read(MQTT_Client *pClient, Timer *pTimer, uint8_
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	threadRc = mqtt_client_unlock_mutex(pClient, &(pClient->clientData.tls_read_mutex));
-	if(SUCCESS != threadRc && (MQTT_NOTHING_TO_READ == rc || SUCCESS == rc)) {
+	if(MQTT_SUCCESS != threadRc && (MQTT_NOTHING_TO_READ == rc || MQTT_SUCCESS == rc)) {
 		return threadRc;
 	}
 #endif
 
 	if(MQTT_NOTHING_TO_READ == rc) {
 		/* Nothing to read, not a cycle failure */
-		return SUCCESS;
-	} else if(SUCCESS != rc) {
+		return MQTT_SUCCESS;
+	} else if(MQTT_SUCCESS != rc) {
 		return rc;
 	}
 
@@ -616,7 +616,7 @@ IoT_Error_t mqtt_internal_wait_for_read(MQTT_Client *pClient, uint8_t packetType
 	} while(NETWORK_DISCONNECTED_ERROR != rc && read_packet_type != packetType);
 
 	if(MQTT_REQUEST_TIMEOUT_ERROR != rc && NETWORK_DISCONNECTED_ERROR != rc && read_packet_type != packetType) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	/* Something failed or we didn't receive the expected packet, return error code */
@@ -650,7 +650,7 @@ IoT_Error_t mqtt_internal_serialize_zero(unsigned char *pTxBuf, size_t txBufLen,
 	ptr = pTxBuf;
 
 	rc = mqtt_internal_init_header(&header, packetType, QOS0, 0, 0);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
@@ -661,7 +661,7 @@ IoT_Error_t mqtt_internal_serialize_zero(unsigned char *pTxBuf, size_t txBufLen,
 	ptr += mqtt_internal_write_len_to_buffer(ptr, 0);
 	*pSerializedLength = (uint32_t) (ptr - pTxBuf);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 #ifdef __cplusplus

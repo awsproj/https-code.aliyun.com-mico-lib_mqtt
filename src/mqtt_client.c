@@ -25,6 +25,7 @@ extern "C" {
 
 #include "mqtt_log.h"
 #include "mqtt_client_interface.h"
+#include "../user_config/mqtt_config.h"
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 #include "threads_interface.h"
@@ -46,7 +47,7 @@ ClientState mqtt_get_client_state(MQTT_Client *pClient) {
 #ifdef _ENABLE_THREAD_SUPPORT_
 IoT_Error_t mqtt_client_lock_mutex(MQTT_Client *pClient, IoT_Mutex_t *pMutex) {
 	FUNC_ENTRY;
-	IoT_Error_t threadRc = FAILURE;
+	IoT_Error_t threadRc = MQTT_FAILURE;
 
 	if(NULL == pClient || NULL == pMutex){
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
@@ -59,11 +60,11 @@ IoT_Error_t mqtt_client_lock_mutex(MQTT_Client *pClient, IoT_Mutex_t *pMutex) {
 		/* Should never return Error because the above request blocks until lock is obtained */
 	}
 
-	if(SUCCESS != threadRc) {
+	if(MQTT_SUCCESS != threadRc) {
 		FUNC_EXIT_RC(threadRc);
 	}
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 IoT_Error_t mqtt_client_unlock_mutex(MQTT_Client *pClient, IoT_Mutex_t *pMutex) {
@@ -79,7 +80,7 @@ IoT_Error_t mqtt_set_client_state(MQTT_Client *pClient, ClientState expectedCurr
 										  ClientState newState) {
 	IoT_Error_t rc;
 #ifdef _ENABLE_THREAD_SUPPORT_
-	IoT_Error_t threadRc = FAILURE;
+	IoT_Error_t threadRc = MQTT_FAILURE;
 #endif
 
 	FUNC_ENTRY;
@@ -89,20 +90,20 @@ IoT_Error_t mqtt_set_client_state(MQTT_Client *pClient, ClientState expectedCurr
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	rc = mqtt_client_lock_mutex(pClient, &(pClient->clientData.state_change_mutex));
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		return rc;
 	}
 #endif
 	if(expectedCurrentState == mqtt_get_client_state(pClient)) {
 		pClient->clientStatus.clientState = newState;
-		rc = SUCCESS;
+		rc = MQTT_SUCCESS;
 	} else {
 		rc = MQTT_UNEXPECTED_CLIENT_STATE_ERROR;
 	}
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	threadRc = mqtt_client_unlock_mutex(pClient, &(pClient->clientData.state_change_mutex));
-	if(SUCCESS == rc && SUCCESS != threadRc) {
+	if(MQTT_SUCCESS == rc && MQTT_SUCCESS != threadRc) {
 		rc = threadRc;
 	}
 #endif
@@ -133,7 +134,7 @@ IoT_Error_t mqtt_set_connect_params(MQTT_Client *pClient, IoT_Client_Connect_Par
 	pClient->clientData.options.keepAliveIntervalInSec = pNewConnectParams->keepAliveIntervalInSec;
 	pClient->clientData.options.isCleanSession = pNewConnectParams->isCleanSession;
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 IoT_Error_t mqtt_init(MQTT_Client *pClient, IoT_Client_Init_Params *pInitParams) {
@@ -182,22 +183,22 @@ IoT_Error_t mqtt_init(MQTT_Client *pClient, IoT_Client_Init_Params *pInitParams)
 
 	/* Initialize default connection options */
 	rc = mqtt_set_connect_params(pClient, &default_options);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 	pClient->clientData.isBlockOnThreadLockEnabled = pInitParams->isBlockOnThreadLockEnabled;
 	rc = aws_iot_thread_mutex_init(&(pClient->clientData.state_change_mutex));
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 	rc = aws_iot_thread_mutex_init(&(pClient->clientData.tls_read_mutex));
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 	rc = aws_iot_thread_mutex_init(&(pClient->clientData.tls_write_mutex));
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 #endif
@@ -210,7 +211,7 @@ IoT_Error_t mqtt_init(MQTT_Client *pClient, IoT_Client_Init_Params *pInitParams)
 					  pInitParams->tlsHandshakeTimeout_ms, pInitParams->isSSLHostnameVerify,
 					  pInitParams->isUseSSL);
 
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		pClient->clientStatus.clientState = CLIENT_STATE_INVALID;
 		FUNC_EXIT_RC(rc);
 	}
@@ -220,7 +221,7 @@ IoT_Error_t mqtt_init(MQTT_Client *pClient, IoT_Client_Init_Params *pInitParams)
 
 	pClient->clientStatus.clientState = CLIENT_STATE_INITIALIZED;
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 uint16_t mqtt_get_next_packet_id(MQTT_Client *pClient) {
@@ -281,7 +282,7 @@ IoT_Error_t mqtt_autoreconnect_set_status(MQTT_Client *pClient, bool newStatus) 
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
 	pClient->clientStatus.isAutoReconnectEnabled = newStatus;
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 IoT_Error_t mqtt_set_disconnect_handler(MQTT_Client *pClient, iot_disconnect_handler pDisconnectHandler,
@@ -293,7 +294,7 @@ IoT_Error_t mqtt_set_disconnect_handler(MQTT_Client *pClient, iot_disconnect_han
 
 	pClient->clientData.disconnectHandler = pDisconnectHandler;
 	pClient->clientData.disconnectHandlerData = pDisconnectHandlerData;
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 uint32_t mqtt_get_network_disconnected_count(MQTT_Client *pClient) {

@@ -23,19 +23,15 @@ extern "C"
 
 #include "mqtt_error.h"
 #include "mqtt_log.h"
-#include "mqtt_config.h"
-#include "root_ca_cert.h"
 #include "network_platform.h"
 #include "common.h"
 #include "debug.h"
+#include "../user_config/mqtt_config.h"
 
 //#define aws_platform_log(M, ...) custom_log("", M, ##__VA_ARGS__)
 #define aws_platform_log(M, ...)
 
 extern void ssl_set_client_cert( const char *_cert_pem, const char *private_key_pem );
-
-/* This is the value used for ssl read timeout */
-#define IOT_SSL_READ_TIMEOUT 10
 
 /*
  * This is a function to do further verification if needed on the cert received
@@ -66,8 +62,17 @@ static OSStatus socket_gethostbyname( const char * domain, uint8_t * addr, uint8
     struct in_addr in_addr;
     char **pptr = NULL;
     char *ip_addr = NULL;
+    LinkStatusTypeDef link_status;
 
     if ( addr == NULL || addrLen < 16 )
+    {
+        return kGeneralErr;
+    }
+
+    memset( &link_status, 0, sizeof(link_status) );
+    micoWlanGetLinkStatus( &link_status );
+
+    if(link_status.is_connected == false)
     {
         return kGeneralErr;
     }
@@ -94,8 +99,7 @@ static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
     struct sockaddr_in addr;
 
     *fd = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-    require_action( IsValidSocket( *fd ), exit,
-                    aws_platform_log("ERROR: Unable to create the tcp_client.") );
+    require_action( IsValidSocket( *fd ), exit, aws_platform_log("ERROR: Unable to create the tcp_client.") );
 
     opt = 1;
     setsockopt( *fd, SOL_SOCKET, SO_KEEPALIVE, (void *) &opt, sizeof(opt) );
@@ -105,6 +109,9 @@ static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
     setsockopt( *fd, IPPROTO_TCP, TCP_KEEPINTVL, (void *) &opt, sizeof(opt) );
     opt = 3;
     setsockopt( *fd, IPPROTO_TCP, TCP_KEEPCNT, (void *) &opt, sizeof(opt) );
+
+    opt = 5000; //5000ms
+    setsockopt(*fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&opt,sizeof(opt));
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr( ipstr );
@@ -126,14 +133,15 @@ static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
 static int socket_send( Network *pNetwork, void *data, size_t len )
 {
     int ret = 0;
+
     if ( pNetwork->tlsConnectParams.isUseSSL == true )
     {
-#ifdef MQTT_USE_SSL
+#ifdef _ENABLE_SSL_SUPPORT_
         ret = ssl_send( pNetwork->tlsDataParams.ssl, data, len );
 #endif
     } else
     {
-        ret = send( pNetwork->tlsDataParams.server_fd, data, len, 0 );
+        ret = send( pNetwork->tlsDataParams.server_fd, data, len, 0);
     }
 
     return ret;
@@ -160,25 +168,44 @@ IoT_Error_t iot_tls_init( Network *pNetwork, char *pRootCALocation, char *pDevic
 
     pNetwork->tlsDataParams.server_fd = -1;
     pNetwork->tlsDataParams.ssl = NULL;
-#ifdef MQTT_USE_SSL
-    ssl_set_client_version( TLS_V1_2_MODE );
-#endif
 
-    return SUCCESS;
+    if ( pNetwork->tlsConnectParams.isUseSSL == true )
+    {
+#ifdef _ENABLE_SSL_SUPPORT_
+        ssl_set_client_version( TLS_V1_2_MODE );
+#endif
+    }
+
+    return MQTT_SUCCESS;
 }
 
 IoT_Error_t iot_tls_is_connected( Network *pNetwork )
 {
-    /* Use this to add implementation which can check for physical layer disconnect */
-    return NETWORK_PHYSICAL_LAYER_CONNECTED;
+    LinkStatusTypeDef link_status;
+
+    memset( &link_status, 0, sizeof(link_status) );
+
+    micoWlanGetLinkStatus( &link_status );
+
+    aws_platform_log("wifi link_status:%d", link_status.is_connected);
+
+    if(link_status.is_connected == true)
+    {
+        return NETWORK_PHYSICAL_LAYER_CONNECTED;
+    }else
+    {
+        return NETWORK_MANUALLY_DISCONNECTED;
+    }
 }
 
 IoT_Error_t iot_tls_connect( Network *pNetwork, TLSConnectParams *params )
 {
     OSStatus err = kNoErr;
 
-    char ipstr[16];
+    char ipstr[16] = {0};
     int socket_fd = -1;
+    int errno;
+    int root_ca_len = 0;
 
     if ( NULL == pNetwork )
     {
@@ -196,7 +223,7 @@ IoT_Error_t iot_tls_connect( Network *pNetwork, TLSConnectParams *params )
                                      params->isUseSSL );
     }
 
-    err = socket_gethostbyname( pNetwork->tlsConnectParams.pDestinationURL, (uint8_t *) ipstr, 16 );
+    err = socket_gethostbyname( pNetwork->tlsConnectParams.pDestinationURL, (uint8_t *) ipstr, sizeof(ipstr) );
     if ( err != kNoErr )
     {
         aws_platform_log("ERROR: Unable to resolute the host address.");
@@ -212,50 +239,50 @@ IoT_Error_t iot_tls_connect( Network *pNetwork, TLSConnectParams *params )
     }
     aws_platform_log("tcp connected fd: %d", socket_fd);
 
-#ifdef MQTT_USE_SSL
-    int errno;
-    int root_ca_len = 0;
-    if ( pNetwork->tlsConnectParams.isUseSSL == false )
+    if ( pNetwork->tlsConnectParams.isUseSSL == true )
     {
-        pNetwork->tlsDataParams.server_fd = socket_fd;
-        return SUCCESS;
-    }
+#ifdef _ENABLE_SSL_SUPPORT_
+        if ( (pNetwork->tlsConnectParams.pDeviceCertLocation != NULL)
+             && (pNetwork->tlsConnectParams.pDevicePrivateKeyLocation != NULL) )
+        {
+            pNetwork->tlsDataParams.clicert = pNetwork->tlsConnectParams.pDeviceCertLocation;
+            pNetwork->tlsDataParams.pkey = pNetwork->tlsConnectParams.pDevicePrivateKeyLocation;
+            ssl_set_client_cert( pNetwork->tlsDataParams.clicert, pNetwork->tlsDataParams.pkey );
+            aws_platform_log("use client ca");
+        }
 
-    if ( (pNetwork->tlsConnectParams.pDeviceCertLocation != NULL)
-         && (pNetwork->tlsConnectParams.pDevicePrivateKeyLocation != NULL) )
-    {
-        pNetwork->tlsDataParams.clicert = client_cert;
-        pNetwork->tlsDataParams.pkey = private_key;
-        ssl_set_client_cert( pNetwork->tlsDataParams.clicert, pNetwork->tlsDataParams.pkey );
-        aws_platform_log("use client ca");
-    }
+        if ( (pNetwork->tlsConnectParams.ServerVerificationFlag == true) )
+        {
+            pNetwork->tlsDataParams.cacert = pNetwork->tlsConnectParams.pRootCALocation;
+            root_ca_len = strlen( pNetwork->tlsDataParams.cacert );
+            aws_platform_log("use server ca");
+        } else
+        {
+            pNetwork->tlsDataParams.cacert = NULL;
+            root_ca_len = 0;
+        }
+        pNetwork->tlsDataParams.ssl = ssl_connect( socket_fd,
+                                                   root_ca_len,
+                                                   pNetwork->tlsDataParams.cacert, &errno );
+        aws_platform_log("fd: %d, err:  %d", socket_fd ,errno);
+        if ( pNetwork->tlsDataParams.ssl == NULL )
+        {
+            aws_platform_log("ssl connect err");
+            close( socket_fd );
+            pNetwork->tlsDataParams.server_fd = -1;
+            return SSL_CONNECTION_ERROR;
+        }
 
-    if ( (pNetwork->tlsConnectParams.ServerVerificationFlag == true) )
-    {
-        pNetwork->tlsDataParams.cacert = root_ca;
-        root_ca_len = strlen( pNetwork->tlsDataParams.cacert );
-        aws_platform_log("use server ca");
+        aws_platform_log("ssl connected");
+#endif
     } else
     {
-        pNetwork->tlsDataParams.cacert = NULL;
-        root_ca_len = 0;
-    }
-    pNetwork->tlsDataParams.ssl = ssl_connect( socket_fd,
-                                               root_ca_len,
-                                               pNetwork->tlsDataParams.cacert, &errno );
-    aws_platform_log("fd: %d, err:  %d", socket_fd ,errno);
-    if ( pNetwork->tlsDataParams.ssl == NULL )
-    {
-        aws_platform_log("ssl connect err");
-        close( socket_fd );
-        pNetwork->tlsDataParams.server_fd = -1;
-        return SSL_CONNECTION_ERROR;
+        pNetwork->tlsDataParams.server_fd = socket_fd;
+        return MQTT_SUCCESS;
     }
 
-    aws_platform_log("ssl connected");
-#endif
     pNetwork->tlsDataParams.server_fd = socket_fd;
-    return SUCCESS;
+    return MQTT_SUCCESS;
 }
 
 IoT_Error_t iot_tls_write( Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer,
@@ -265,16 +292,11 @@ size_t *written_len )
     bool isErrorFlag = false;
     int frags, ret = 0;
 
-    aws_platform_log("socket write: %d", len);
+    aws_platform_log("socket write: %d, time: %ld", len, left_ms(timer));
 
-    for ( written_so_far = 0, frags = 0;
-        written_so_far < len && !has_timer_expired( timer ); written_so_far += ret, frags++ )
+    for ( written_so_far = 0, frags = 0; written_so_far < len && !has_timer_expired( timer ); written_so_far += ret, frags++ )
     {
-        while ( (!has_timer_expired( timer ))
-                &&
-                ((ret = socket_send( pNetwork, pMsg + written_so_far,
-                                     len - written_so_far ))
-                 <= 0) )
+        while ( (!has_timer_expired( timer )) && ((ret = socket_send( pNetwork, pMsg + written_so_far, len - written_so_far )) <= 0) )
         {
             if ( ret < 0 )
             {
@@ -301,7 +323,7 @@ size_t *written_len )
         return NETWORK_SSL_WRITE_TIMEOUT_ERROR;
     }
 
-    return SUCCESS;
+    return MQTT_SUCCESS;
 }
 
 IoT_Error_t iot_tls_read( Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer,
@@ -325,7 +347,7 @@ size_t *read_len )
     {
         if ( pNetwork->tlsConnectParams.isUseSSL == true )
         {
-#ifdef MQTT_USE_SSL
+#ifdef _ENABLE_SSL_SUPPORT_
             if ( ssl_pending( pNetwork->tlsDataParams.ssl ) )
             {
                 ret = ssl_recv( pNetwork->tlsDataParams.ssl, pMsg, len );
@@ -387,7 +409,7 @@ size_t *read_len )
     if ( len == 0 )
     {
         *read_len = rxLen;
-        return SUCCESS;
+        return MQTT_SUCCESS;
     }
 
     if ( rxLen == 0 )
@@ -405,8 +427,10 @@ IoT_Error_t iot_tls_disconnect( Network *pNetwork )
      * No further action required since this is disconnect call */
     if ( pNetwork->tlsDataParams.ssl != NULL )
     {
+#ifdef _ENABLE_SSL_SUPPORT_
         ssl_close( pNetwork->tlsDataParams.ssl );
         pNetwork->tlsDataParams.ssl = NULL;
+#endif
     }
 
     if ( pNetwork->tlsDataParams.server_fd != -1 )
@@ -415,28 +439,13 @@ IoT_Error_t iot_tls_disconnect( Network *pNetwork )
         pNetwork->tlsDataParams.server_fd = -1;
     }
 
-    return SUCCESS;
+    return MQTT_SUCCESS;
 }
 
 IoT_Error_t iot_tls_destroy( Network *pNetwork )
 {
-    return SUCCESS;
+    return MQTT_SUCCESS;
 }
-
-char *mqtt_client_id_get( char clientid[30] )
-{
-    uint8_t mac[6];
-    char mac_str[13];
-
-    mico_wlan_get_mac_address( mac );
-    sprintf( mac_str, "%02X%02X%02X%02X%02X%02X",
-             mac[0],
-             mac[1], mac[2], mac[3], mac[4], mac[5] );
-    sprintf( clientid, "%s_%s", MQTT_CLIENT_ID, mac_str );
-
-    return clientid;
-}
-
 #ifdef __cplusplus
 }
 #endif

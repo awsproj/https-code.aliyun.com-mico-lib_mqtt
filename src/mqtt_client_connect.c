@@ -163,7 +163,7 @@ static IoT_Error_t _mqtt_serialize_connect(unsigned char *pTxBuf, size_t txBufLe
 	}
 
 	rc = mqtt_internal_init_header(&header, CONNECT, QOS0, 0, 0);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
@@ -219,7 +219,7 @@ static IoT_Error_t _mqtt_serialize_connect(unsigned char *pTxBuf, size_t txBufLe
 
 	*pSerializedLen = (size_t) (ptr - pTxBuf);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -259,12 +259,12 @@ static IoT_Error_t _mqtt_deserialize_connack(unsigned char *pSessionPresent, IoT
 
 	header.byte = mqtt_internal_read_char(&curdata);
 	if(CONNACK != header.bits.type) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	/* read remaining length */
 	rc = mqtt_internal_decode_remaining_length_from_buffer(curdata, &decodedLen, &readBytesLen);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
@@ -302,7 +302,7 @@ static IoT_Error_t _mqtt_deserialize_connack(unsigned char *pSessionPresent, IoT
 			break;
 	}
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -360,23 +360,23 @@ static bool _mqtt_is_client_state_valid_for_connect(ClientState clientState) {
  */
 static IoT_Error_t _mqtt_internal_connect(MQTT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
 	Timer connect_timer;
-	IoT_Error_t connack_rc = FAILURE;
+	IoT_Error_t connack_rc = MQTT_FAILURE;
 	char sessionPresent = 0;
 	size_t len = 0;
-	IoT_Error_t rc = FAILURE;
+	IoT_Error_t rc = MQTT_FAILURE;
 
 	FUNC_ENTRY;
 
 	if(NULL != pConnectParams) {
 		/* override default options if new options were supplied */
 		rc = mqtt_set_connect_params(pClient, pConnectParams);
-		if(SUCCESS != rc) {
+		if(MQTT_SUCCESS != rc) {
 			FUNC_EXIT_RC(MQTT_CONNECTION_ERROR);
 		}
 	}
 
 	rc = pClient->networkStack.connect(&(pClient->networkStack), NULL);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		/* TLS Connect failed, return error */
 		FUNC_EXIT_RC(rc);
 	}
@@ -387,26 +387,26 @@ static IoT_Error_t _mqtt_internal_connect(MQTT_Client *pClient, IoT_Client_Conne
 	pClient->clientData.keepAliveInterval = pClient->clientData.options.keepAliveIntervalInSec;
 	rc = _mqtt_serialize_connect(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
 										 &(pClient->clientData.options), &len);
-	if(SUCCESS != rc || 0 >= len) {
+	if(MQTT_SUCCESS != rc || 0 >= len) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* send the connect packet */
 	rc = mqtt_internal_send_packet(pClient, len, &connect_timer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* this will be a blocking call, wait for the CONNACK */
 	rc = mqtt_internal_wait_for_read(pClient, CONNACK, &connect_timer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* Received CONNACK, check the return code */
 	rc = _mqtt_deserialize_connack((unsigned char *) &sessionPresent, &connack_rc, pClient->clientData.readBuf,
 										   pClient->clientData.readBufSize);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
@@ -417,7 +417,7 @@ static IoT_Error_t _mqtt_internal_connect(MQTT_Client *pClient, IoT_Client_Conne
 	pClient->clientStatus.isPingOutstanding = false;
 	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -454,7 +454,7 @@ IoT_Error_t mqtt_connect(MQTT_Client *pClient, IoT_Client_Connect_Params *pConne
 
 	rc = _mqtt_internal_connect(pClient, pConnectParams);
 
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		pClient->networkStack.disconnect(&(pClient->networkStack));
 		pClient->networkStack.destroy(&(pClient->networkStack));
 		mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTING, CLIENT_STATE_DISCONNECTED_ERROR);
@@ -487,7 +487,7 @@ IoT_Error_t _mqtt_internal_disconnect(MQTT_Client *pClient) {
 	rc = mqtt_internal_serialize_zero(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
 											  DISCONNECT,
 											  &serialized_len);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
@@ -497,7 +497,7 @@ IoT_Error_t _mqtt_internal_disconnect(MQTT_Client *pClient) {
 	/* send the disconnect packet */
 	if(serialized_len > 0) {
 		rc = mqtt_internal_send_packet(pClient, serialized_len, &timer);
-		if(SUCCESS != rc) {
+		if(MQTT_SUCCESS != rc) {
 			FUNC_EXIT_RC(rc);
 		}
 	}
@@ -507,10 +507,10 @@ IoT_Error_t _mqtt_internal_disconnect(MQTT_Client *pClient) {
 	rc = pClient->networkStack.destroy(&(pClient->networkStack));
 	if(0 != rc) {
 		/* TLS Destroy failed, return error */
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -541,13 +541,13 @@ IoT_Error_t mqtt_disconnect(MQTT_Client *pClient) {
 	}
 
 	rc = mqtt_set_client_state(pClient, clientState, CLIENT_STATE_DISCONNECTING);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	rc = _mqtt_internal_disconnect(pClient);
 
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		pClient->clientStatus.clientState = clientState;
 	} else {
 		/* If called from Keepalive, this gets set to CLIENT_STATE_DISCONNECTED_ERROR */
@@ -593,7 +593,7 @@ IoT_Error_t mqtt_attempt_reconnect(MQTT_Client *pClient) {
 	}
 
 	rc = mqtt_resubscribe(pClient);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 

@@ -58,7 +58,7 @@ static IoT_Error_t _mqtt_serialize_unsubscribe(unsigned char *pTxBuf, size_t txB
 	}
 
 	rc = mqtt_internal_init_header(&header, UNSUBSCRIBE, QOS1, dup, 0);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 	mqtt_internal_write_char(&ptr, header.byte); /* write header */
@@ -73,7 +73,7 @@ static IoT_Error_t _mqtt_serialize_unsubscribe(unsigned char *pTxBuf, size_t txB
 
 	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 
@@ -92,8 +92,8 @@ static IoT_Error_t _mqtt_deserialize_unsuback(uint16_t *pPacketId, unsigned char
 	FUNC_ENTRY;
 
 	rc = mqtt_internal_deserialize_ack(&type, &dup, pPacketId, pRxBuf, rxBufLen);
-	if(SUCCESS == rc && UNSUBACK != type) {
-		rc = FAILURE;
+	if(MQTT_SUCCESS == rc && UNSUBACK != type) {
+		rc = MQTT_FAILURE;
 	}
 
 	FUNC_EXIT_RC(rc);
@@ -137,7 +137,7 @@ static IoT_Error_t _mqtt_internal_unsubscribe(MQTT_Client *pClient, const char *
 	}
 
 	if(false == subscriptionExists) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	init_timer(&timer);
@@ -146,23 +146,23 @@ static IoT_Error_t _mqtt_internal_unsubscribe(MQTT_Client *pClient, const char *
 	rc = _mqtt_serialize_unsubscribe(pClient->clientData.writeBuf, pClient->clientData.writeBufSize, 0,
 											 mqtt_get_next_packet_id(pClient), 1, &pTopicFilter,
 											 &topicFilterLen, &serializedLen);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* send the unsubscribe packet */
 	rc = mqtt_internal_send_packet(pClient, serializedLen, &timer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	rc = mqtt_internal_wait_for_read(pClient, UNSUBACK, &timer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	rc = _mqtt_deserialize_unsuback(&packet_id, pClient->clientData.readBuf, pClient->clientData.readBufSize);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
@@ -176,7 +176,7 @@ static IoT_Error_t _mqtt_internal_unsubscribe(MQTT_Client *pClient, const char *
 		}
 	}
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -212,7 +212,7 @@ IoT_Error_t mqtt_unsubscribe(MQTT_Client *pClient, const char *pTopicFilter, uin
 	}
 
 	rc = mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTED_UNSUBSCRIBE_IN_PROGRESS);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		rc = mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_UNSUBSCRIBE_IN_PROGRESS, clientState);
 		return rc;
 	}
@@ -220,7 +220,7 @@ IoT_Error_t mqtt_unsubscribe(MQTT_Client *pClient, const char *pTopicFilter, uin
 	unsubRc = _mqtt_internal_unsubscribe(pClient, pTopicFilter, topicFilterLen);
 
 	rc = mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_UNSUBSCRIBE_IN_PROGRESS, clientState);
-	if(SUCCESS == unsubRc && SUCCESS != rc) {
+	if(MQTT_SUCCESS == unsubRc && MQTT_SUCCESS != rc) {
 		unsubRc = rc;
 	}
 

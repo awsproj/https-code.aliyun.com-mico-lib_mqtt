@@ -37,9 +37,6 @@ typedef struct _TLSDataParams {
     const char *pkey;
 }TLSDataParams;
 
-
-char *mqtt_client_id_get( char clientid[30] );
-
 #ifdef __cplusplus
 }
 #endif

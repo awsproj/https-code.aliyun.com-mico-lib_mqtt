@@ -6,7 +6,7 @@
  * Starting point for porting the SDK to the threading hardware layer of a new platform.
  */
 
-#include "mqtt_config.h"
+#include "../user_config/mqtt_config.h"
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 #ifndef __THREADS_INTERFACE_H_
