@@ -14,6 +14,7 @@
  */
 
 #include "threads_platform.h"
+#include "../user_config/mqtt_config.h"
 #ifdef _ENABLE_THREAD_SUPPORT_
 
 #ifdef __cplusplus
@@ -33,7 +34,7 @@ IoT_Error_t aws_iot_thread_mutex_init(IoT_Mutex_t *pMutex) {
 		return MUTEX_INIT_ERROR;
 	}
 
-	return SUCCESS;
+	return MQTT_SUCCESS;
 }
 
 /**
@@ -51,7 +52,7 @@ int rc = mico_rtos_lock_mutex(&(pMutex->lock));
 		return MUTEX_LOCK_ERROR;
 	}
 
-	return SUCCESS;
+	return MQTT_SUCCESS;
 }
 
 /**
@@ -80,7 +81,7 @@ IoT_Error_t aws_iot_thread_mutex_unlock(IoT_Mutex_t *pMutex) {
 		return MUTEX_UNLOCK_ERROR;
 	}
 
-	return SUCCESS;
+	return MQTT_SUCCESS;
 }
 
 /**
@@ -96,7 +97,7 @@ IoT_Error_t aws_iot_thread_mutex_destroy(IoT_Mutex_t *pMutex) {
 		return MUTEX_DESTROY_ERROR;
 	}
 
-	return SUCCESS;
+	return MQTT_SUCCESS;
 }
 
 #ifdef __cplusplus

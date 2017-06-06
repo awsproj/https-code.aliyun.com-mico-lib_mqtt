@@ -35,7 +35,7 @@ extern "C" {
 
 /* AWS Specific header files */
 #include "mqtt_error.h"
-#include "mqtt_config.h"
+#include "../user_config/mqtt_config.h"
 
 /* Platform specific implementation header files */
 #include "network_interface.h"

@@ -31,11 +31,11 @@ extern "C" {
  * @param stringLen pointer to variable which has the length of the string
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param enddata pointer to the end of the data: do not read beyond
- * @return SUCCESS if successful, FAILURE if not
+ * @return MQTT_SUCCESS if successful, MQTT_FAILURE if not
  */
 static IoT_Error_t _mqtt_read_string_with_len(char **stringVar, uint16_t *stringLen,
 													  unsigned char **pptr, unsigned char *enddata) {
-	IoT_Error_t rc = FAILURE;
+	IoT_Error_t rc = MQTT_FAILURE;
 
 	FUNC_ENTRY;
 	/* the first two bytes are the length of the string */
@@ -45,7 +45,7 @@ static IoT_Error_t _mqtt_read_string_with_len(char **stringVar, uint16_t *string
 		if(&(*pptr)[*stringLen] <= enddata) {
 			*stringVar = (char *) *pptr;
 			*pptr += *stringLen;
-			rc = SUCCESS;
+			rc = MQTT_SUCCESS;
 		}
 	}
 
@@ -95,7 +95,7 @@ static IoT_Error_t _mqtt_internal_serialize_publish(unsigned char *pTxBuf, size_
 	}
 
 	rc = mqtt_internal_init_header(&header, PUBLISH, qos, dup, retained);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 	mqtt_internal_write_char(&ptr, header.byte); /* write header */
@@ -113,7 +113,7 @@ static IoT_Error_t _mqtt_internal_serialize_publish(unsigned char *pTxBuf, size_
 
 	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -149,7 +149,7 @@ IoT_Error_t mqtt_internal_serialize_ack(unsigned char *pTxBuf, size_t txBufLen,
 
 	requestQoS = (PUBREL == msgType) ? QOS1 : QOS0;
 	rc = mqtt_internal_init_header(&header, msgType, requestQoS, dup, 0);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 	mqtt_internal_write_char(&ptr, header.byte); /* write header */
@@ -158,7 +158,7 @@ IoT_Error_t mqtt_internal_serialize_ack(unsigned char *pTxBuf, size_t txBufLen,
 	mqtt_internal_write_uint_16(&ptr, packetId);
 	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -199,31 +199,31 @@ static IoT_Error_t _mqtt_internal_publish(MQTT_Client *pClient, const char *pTop
 												  pParams->qos, pParams->isRetained, pParams->id, pTopicName,
 												  topicNameLen, (unsigned char *) pParams->payload,
 												  pParams->payloadLen, &len);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* send the publish packet */
 	rc = mqtt_internal_send_packet(pClient, len, &timer);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* Wait for ack if QoS1 */
 	if(QOS1 == pParams->qos) {
 		rc = mqtt_internal_wait_for_read(pClient, PUBACK, &timer);
-		if(SUCCESS != rc) {
+		if(MQTT_SUCCESS != rc) {
 			FUNC_EXIT_RC(rc);
 		}
 
 		rc = mqtt_internal_deserialize_ack(&type, &dup, &packet_id, pClient->clientData.readBuf,
 												   pClient->clientData.readBufSize);
-		if(SUCCESS != rc) {
+		if(MQTT_SUCCESS != rc) {
 			FUNC_EXIT_RC(rc);
 		}
 	}
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -264,14 +264,14 @@ IoT_Error_t mqtt_publish(MQTT_Client *pClient, const char *pTopicName, uint16_t 
 	}
 
 	rc = mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTED_PUBLISH_IN_PROGRESS);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	pubRc = _mqtt_internal_publish(pClient, pTopicName, topicNameLen, pParams);
 
 	rc = mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_PUBLISH_IN_PROGRESS, clientState);
-	if(SUCCESS == pubRc && SUCCESS != rc) {
+	if(MQTT_SUCCESS == pubRc && MQTT_SUCCESS != rc) {
 		pubRc = rc;
 	}
 
@@ -300,7 +300,7 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 													  unsigned char *pRxBuf, size_t rxBufLen) {
 	unsigned char *curData = pRxBuf;
 	unsigned char *endData = NULL;
-	IoT_Error_t rc = FAILURE;
+	IoT_Error_t rc = MQTT_FAILURE;
 	uint32_t decodedLen = 0;
 	uint32_t readBytesLen = 0;
 	MQTTHeader header = {0};
@@ -308,7 +308,7 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 	FUNC_ENTRY;
 
 	if(NULL == dup || NULL == qos || NULL == retained || NULL == pPacketId) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	/* Publish header size is at least four bytes.
@@ -323,7 +323,7 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 
 	header.byte = mqtt_internal_read_char(&curData);
 	if(PUBLISH != header.bits.type) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	*dup = header.bits.dup;
@@ -332,7 +332,7 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 
 	/* read remaining length */
 	rc = mqtt_internal_decode_remaining_length_from_buffer(curData, &decodedLen, &readBytesLen);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;
 	}
@@ -340,9 +340,9 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 	endData = curData + decodedLen;
 
 	/* do we have enough data to read the protocol version byte? */
-	if(SUCCESS != _mqtt_read_string_with_len(pTopicName, topicNameLen, &curData, endData)
+	if(MQTT_SUCCESS != _mqtt_read_string_with_len(pTopicName, topicNameLen, &curData, endData)
 	   || (0 > (endData - curData))) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	if(QOS0 != *qos) {
@@ -352,7 +352,7 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 	*payloadLen = (size_t) (endData - curData);
 	*payload = curData;
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 /**
@@ -368,7 +368,7 @@ IoT_Error_t mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 IoT_Error_t mqtt_internal_deserialize_ack(unsigned char *pPacketType, unsigned char *dup,
 												  uint16_t *pPacketId, unsigned char *pRxBuf,
 												  size_t rxBuflen) {
-	IoT_Error_t rc = FAILURE;
+	IoT_Error_t rc = MQTT_FAILURE;
 	unsigned char *curdata = pRxBuf;
 	unsigned char *enddata = NULL;
 	uint32_t decodedLen = 0;
@@ -393,19 +393,19 @@ IoT_Error_t mqtt_internal_deserialize_ack(unsigned char *pPacketType, unsigned c
 
 	/* read remaining length */
 	rc = mqtt_internal_decode_remaining_length_from_buffer(curdata, &decodedLen, &readBytesLen);
-	if(SUCCESS != rc) {
+	if(MQTT_SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 	curdata += (readBytesLen);
 	enddata = curdata + decodedLen;
 
 	if(enddata - curdata < 2) {
-		FUNC_EXIT_RC(FAILURE);
+		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
 	*pPacketId = mqtt_internal_read_uint16_t(&curdata);
 
-	FUNC_EXIT_RC(SUCCESS);
+	FUNC_EXIT_RC(MQTT_SUCCESS);
 }
 
 #ifdef __cplusplus
