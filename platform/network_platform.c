@@ -101,15 +101,6 @@ static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
     *fd = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
     require_action( IsValidSocket( *fd ), exit, aws_platform_log("ERROR: Unable to create the tcp_client.") );
 
-    opt = 1;
-    setsockopt( *fd, SOL_SOCKET, SO_KEEPALIVE, (void *) &opt, sizeof(opt) );
-    opt = 10;
-    setsockopt( *fd, IPPROTO_TCP, TCP_KEEPIDLE, (void *) &opt, sizeof(opt) );
-    opt = 5;
-    setsockopt( *fd, IPPROTO_TCP, TCP_KEEPINTVL, (void *) &opt, sizeof(opt) );
-    opt = 3;
-    setsockopt( *fd, IPPROTO_TCP, TCP_KEEPCNT, (void *) &opt, sizeof(opt) );
-
     opt = 5000; //5000ms
     setsockopt(*fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&opt,sizeof(opt));
 
