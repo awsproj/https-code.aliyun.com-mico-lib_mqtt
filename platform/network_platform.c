@@ -101,8 +101,13 @@ static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
     *fd = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
     require_action( IsValidSocket( *fd ), exit, aws_platform_log("ERROR: Unable to create the tcp_client.") );
 
-    opt = 5000; //5000ms
-    setsockopt(*fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&opt,sizeof(opt));
+    opt = 3000; //3000ms
+    retVal = setsockopt(*fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&opt,sizeof(opt));
+    require_string(retVal >= 0, exit, "SO_SNDTIMEO setsockopt error!");
+
+    opt = 3000; //3000ms
+    retVal = setsockopt(*fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&opt,sizeof(opt));
+    require_string(retVal >= 0, exit, "SO_RCVTIMEO setsockopt error!");
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr( ipstr );
