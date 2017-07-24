@@ -95,7 +95,7 @@ static OSStatus socket_gethostbyname( const char * domain, uint8_t * addr, uint8
 static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
 {
     OSStatus err = kNoErr;
-    int opt = 0;
+    int opt = 0, retVal = 0;
     struct sockaddr_in addr;
 
     *fd = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
