@@ -28,8 +28,11 @@ extern "C"
 #include "debug.h"
 #include "../user_config/mqtt_config.h"
 
-//#define aws_platform_log(M, ...) custom_log("", M, ##__VA_ARGS__)
+#ifdef AWS_MQTT_LOG_ENABLE
+#define aws_platform_log(M, ...) custom_log("", M, ##__VA_ARGS__)
+#else
 #define aws_platform_log(M, ...)
+#endif
 
 extern void ssl_set_client_cert( const char *_cert_pem, const char *private_key_pem );
 
@@ -288,7 +291,7 @@ size_t *written_len )
     bool isErrorFlag = false;
     int frags, ret = 0;
 
-    aws_platform_log("socket write: %d, time: %ld", len, left_ms(timer));
+    // aws_platform_log("socket write: %d, time: %ld", len, left_ms(timer));
 
     for ( written_so_far = 0, frags = 0; written_so_far < len && !has_timer_expired( timer ); written_so_far += ret, frags++ )
     {
@@ -296,7 +299,7 @@ size_t *written_len )
         {
             if ( ret < 0 )
             {
-                aws_platform_log(" failed");
+                aws_platform_log("socket write failed");
                 /* All other negative return values indicate connection needs to be reset.
                  * Will be caught in ping request so ignored here */
                 isErrorFlag = true;
@@ -310,7 +313,7 @@ size_t *written_len )
     }
 
     *written_len = written_so_far;
-    aws_platform_log("socket write done: %d", written_so_far);
+    // aws_platform_log("socket write done: %d", written_so_far);
     if ( isErrorFlag )
     {
         return NETWORK_SSL_WRITE_ERROR;
@@ -338,7 +341,7 @@ size_t *read_len )
     t.tv_sec = time_out / 1000;
     t.tv_usec = (time_out % 1000) * 1000;
 
-    aws_platform_log("socket fd:%d, read: %d, left_ms: %ld", pNetwork->tlsDataParams.server_fd, len, left_ms(timer));
+    // aws_platform_log("socket fd:%d, read: %d, left_ms: %ld", pNetwork->tlsDataParams.server_fd, len, left_ms(timer));
     while ( len > 0 )
     {
         if ( pNetwork->tlsConnectParams.isUseSSL == true )
@@ -350,7 +353,7 @@ size_t *read_len )
             } else
             {
                 ret = select( fd + 1, &readfds, NULL, NULL, &t );
-                aws_platform_log("select ret %d", ret);
+                // aws_platform_log("select ret %d", ret);
                 if ( ret <= 0 )
                 {
                     break;
@@ -367,7 +370,7 @@ size_t *read_len )
         } else
         {
             ret = select( fd + 1, &readfds, NULL, NULL, &t );
-            aws_platform_log("select ret %d", ret);
+            // aws_platform_log("select ret %d", ret);
             if ( ret <= 0 )
             {
                 break;
@@ -400,7 +403,7 @@ size_t *read_len )
         }
     }
 
-    aws_platform_log("socket read done: %d", rxLen);
+    // aws_platform_log("socket read done: %d", rxLen);
 
     if ( len == 0 )
     {
