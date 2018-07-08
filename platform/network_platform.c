@@ -132,15 +132,29 @@ static OSStatus socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
 static int socket_send( Network *pNetwork, void *data, size_t len )
 {
     int ret = 0;
+    fd_set writefds;
+    struct timeval t;
+    int fd = pNetwork->tlsDataParams.server_fd;
 
-    if ( pNetwork->tlsConnectParams.isUseSSL == true )
+    FD_ZERO( &writefds );
+    FD_SET( fd, &writefds );
+
+    t.tv_sec = 0;
+    t.tv_usec = 50*1000;
+
+    ret = select( fd + 1, NULL, &writefds, NULL, &t );
+    
+    if ( FD_ISSET(fd, &writefds) )
     {
+        if ( pNetwork->tlsConnectParams.isUseSSL == true )
+        {
 #ifdef _ENABLE_SSL_SUPPORT_
-        ret = ssl_send( pNetwork->tlsDataParams.ssl, data, len );
+            ret = ssl_send( pNetwork->tlsDataParams.ssl, data, len );
 #endif
-    } else
-    {
-        ret = send( pNetwork->tlsDataParams.server_fd, data, len, 0);
+        } else
+        {
+            ret = send( pNetwork->tlsDataParams.server_fd, data, len, 0);
+        }
     }
 
     return ret;
