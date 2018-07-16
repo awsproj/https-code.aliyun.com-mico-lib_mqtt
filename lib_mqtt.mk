@@ -10,7 +10,9 @@
 NAME := Lib_MQTT_AWS
 
 GLOBAL_INCLUDES := 	./include \
-					./platform
+					./platform \
+					./user_config
+
 $(NAME)_SOURCES := ./src/mqtt_client_common_internal.c \
 				   ./src/mqtt_client_connect.c \
 				   ./src/mqtt_client_publish.c \
