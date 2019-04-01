@@ -97,15 +97,19 @@ typedef enum {
 static uint32_t _mqtt_get_connect_packet_length(IoT_Client_Connect_Params *pConnectParams) {
 	uint32_t len;
 	/* Enable when adding further MQTT versions */
-	/*size_t len = 0;
 	switch(pConnectParams->MQTTVersion) {
 		case MQTT_3_1_1:
 			len = 10;
 			break;
-	}*/
+        case MQTT_3_1_0:
+            len = 12;
+            break;
+        default:
+            len = 10;
+            break;
+	}
 	FUNC_ENTRY;
 
-	len = 10; // Len = 10 for MQTT_3_1_1
 	len = len + pConnectParams->clientIDLen + 2;
 
 	if(pConnectParams->isWillMsgPresent) {
@@ -150,6 +154,7 @@ static IoT_Error_t _mqtt_serialize_connect(unsigned char *pTxBuf, size_t txBufLe
 
 	/* Check needed here before we start writing to the Tx buffer */
 	switch(pConnectParams->MQTTVersion) {
+        case MQTT_3_1_0:
 		case MQTT_3_1_1:
 			break;
 		default:
@@ -172,10 +177,13 @@ static IoT_Error_t _mqtt_serialize_connect(unsigned char *pTxBuf, size_t txBufLe
 	ptr += mqtt_internal_write_len_to_buffer(ptr, len); /* write remaining length */
 
 	// Enable if adding support for more versions
-	//if(MQTT_3_1_1 == pConnectParams->MQTTVersion) {
-	mqtt_internal_write_utf8_string(&ptr, "MQTT", 4);
-	mqtt_internal_write_char(&ptr, (unsigned char) pConnectParams->MQTTVersion);
-	//}
+	if(MQTT_3_1_1 == pConnectParams->MQTTVersion) {
+	    mqtt_internal_write_utf8_string(&ptr, "MQTT", 4);
+	    mqtt_internal_write_char(&ptr, (unsigned char) pConnectParams->MQTTVersion);
+	} else if(MQTT_3_1_0 == pConnectParams->MQTTVersion) {
+	    mqtt_internal_write_utf8_string(&ptr, "MQIsdp", 6);
+	    mqtt_internal_write_char(&ptr, (unsigned char) pConnectParams->MQTTVersion);
+	}
 
 	flags.all = 0;
 	flags.bits.cleansession = (pConnectParams->isCleanSession) ? 1 : 0;

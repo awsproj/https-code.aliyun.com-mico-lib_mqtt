@@ -83,6 +83,7 @@ typedef struct {
  *
  */
 typedef enum {
+    MQTT_3_1_0 = 3,
 	MQTT_3_1_1 = 4    ///< MQTT 3.1.1 (protocol message byte = 4)
 } MQTT_Ver_t;
 
