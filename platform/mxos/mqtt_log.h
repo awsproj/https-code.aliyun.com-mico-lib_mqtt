@@ -31,11 +31,11 @@ extern mos_mutex_id_t stdio_tx_mutex;
 #ifdef ENABLE_IOT_DEBUG
 #define IOT_DEBUG(...)    \
 	{\
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf("DEBUG:   %s L#%d ", __func__, __LINE__);  \
 	printf(__VA_ARGS__); \
 	printf("\r\n"); \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	}
 #else
 #define IOT_DEBUG(...)
@@ -49,21 +49,21 @@ extern mos_mutex_id_t stdio_tx_mutex;
 #ifdef ENABLE_IOT_TRACE
 #define FUNC_ENTRY    \
 	{\
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf("FUNC_ENTRY:   %s L#%d \r\n", __func__, __LINE__);  \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	}
 #define FUNC_EXIT    \
 	{\
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf("FUNC_EXIT:   %s L#%d \r\n", __func__, __LINE__);  \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	}
 #define FUNC_EXIT_RC(x)    \
 	{\
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf("FUNC_EXIT:   %s L#%d Return Code : %d \r\n", __func__, __LINE__, x);  \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	return x; \
 	}
 #else
@@ -81,10 +81,10 @@ extern mos_mutex_id_t stdio_tx_mutex;
 #ifdef ENABLE_IOT_INFO
 #define IOT_INFO(...)    \
 	{\
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf(__VA_ARGS__); \
 	printf("\r\n"); \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	}
 #else
 #define IOT_INFO(...)
@@ -98,11 +98,11 @@ extern mos_mutex_id_t stdio_tx_mutex;
 #ifdef ENABLE_IOT_WARN
 #define IOT_WARN(...)   \
 	{ \
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf("WARN:  %s L#%d ", __func__, __LINE__);  \
 	printf(__VA_ARGS__); \
 	printf("\r\n"); \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	}
 #else
 #define IOT_WARN(...)
@@ -116,11 +116,11 @@ extern mos_mutex_id_t stdio_tx_mutex;
 #ifdef ENABLE_IOT_ERROR
 #define IOT_ERROR(...)  \
 	{ \
-    mico_rtos_lock_mutex( &stdio_tx_mutex ); \
+    mos_mutex_lock( stdio_tx_mutex ); \
 	printf("ERROR: %s L#%d ", __func__, __LINE__); \
 	printf(__VA_ARGS__); \
 	printf("\r\n"); \
-	mico_rtos_unlock_mutex( &stdio_tx_mutex );\
+	mos_mutex_unlock( stdio_tx_mutex );\
 	}
 #else
 #define IOT_ERROR(...)
