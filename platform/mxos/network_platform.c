@@ -96,17 +96,20 @@ static int socket_gethostbyname( const char * domain, uint8_t * addr, uint8_t ad
 static int socket_tcp_connect( int *fd, char *ipstr, uint16_t port )
 {
     int err = kNoErr;
-    int opt = 0, retVal = 0;
+    int retVal = 0;
     struct sockaddr_in addr;
+    struct timeval opt;
 
     *fd = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
     require_action( IsValidSocket( *fd ), exit, aws_platform_log("ERROR: Unable to create the tcp_client.") );
 
-    opt = 5000; //3000ms
+    opt.tv_sec = 5000; //3000ms
+    opt.tv_usec = 0;
     retVal = setsockopt(*fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&opt,sizeof(opt));
     require_string(retVal >= 0, exit, "SO_SNDTIMEO setsockopt error!");
 
-    opt = 6000; //3000ms
+    opt.tv_sec = 6000; //3000ms
+    opt.tv_usec = 0;
     retVal = setsockopt(*fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&opt,sizeof(opt));
     require_string(retVal >= 0, exit, "SO_RCVTIMEO setsockopt error!");
 
