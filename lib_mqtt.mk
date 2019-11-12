@@ -9,7 +9,7 @@
 
 NAME := Lib_MQTT_AWS
 
-GLOBAL_INCLUDES := 	./include \
+GLOBAL_INCLUDES += 	./include \
 					./user_config
 
 ifeq ($(BUILD_MXOS), 1)
@@ -31,7 +31,7 @@ $(NAME)_SOURCES += ./platform/mxos/network_platform.c \
 				   ./platform/mxos/threads_platform.c \
 				   ./platform/mxos/timer_platform.c
 else
-$(NAME)_SOURCES == ./platform/mico/network_platform.c \
+$(NAME)_SOURCES += ./platform/mico/network_platform.c \
 				   ./platform/mico/threads_platform.c \
 				   ./platform/mico/timer_platform.c
 endif
