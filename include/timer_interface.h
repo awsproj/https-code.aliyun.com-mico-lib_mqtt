@@ -96,7 +96,7 @@ uint32_t left_ms(Timer *);
  *
  * @param Timer - pointer to the timer to be initialized
  */
-void init_timer(Timer *);
+void mqtt_init_timer(Timer *);
 
 #ifdef __cplusplus
 }

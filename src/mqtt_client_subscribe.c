@@ -195,7 +195,7 @@ static IoT_Error_t _mqtt_internal_subscribe(MQTT_Client *pClient, const char *pT
 	QoS grantedQoS[3] = {QOS0, QOS0, QOS0};
 
 	FUNC_ENTRY;
-	init_timer(&timer);
+	mqtt_init_timer(&timer);
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 
 	serializedLen = 0;
@@ -333,7 +333,7 @@ static IoT_Error_t _mqtt_internal_resubscribe(MQTT_Client *pClient) {
 	existingSubCount = _mqtt_get_free_message_handler_index(pClient);
 
 	for(itr = 0; itr < existingSubCount; itr++) {
-		init_timer(&timer);
+		mqtt_init_timer(&timer);
 		countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 
 		rc = _mqtt_serialize_subscribe(pClient->clientData.writeBuf, pClient->clientData.writeBufSize, 0,

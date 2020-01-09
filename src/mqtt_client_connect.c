@@ -389,7 +389,7 @@ static IoT_Error_t _mqtt_internal_connect(MQTT_Client *pClient, IoT_Client_Conne
 		FUNC_EXIT_RC(rc);
 	}
 
-	init_timer(&connect_timer);
+	mqtt_init_timer(&connect_timer);
 	countdown_ms(&connect_timer, pClient->clientData.commandTimeoutMs);
 
 	pClient->clientData.keepAliveInterval = pClient->clientData.options.keepAliveIntervalInSec;
@@ -499,7 +499,7 @@ IoT_Error_t _mqtt_internal_disconnect(MQTT_Client *pClient) {
 		FUNC_EXIT_RC(rc);
 	}
 
-	init_timer(&timer);
+	mqtt_init_timer(&timer);
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 
 	/* send the disconnect packet */

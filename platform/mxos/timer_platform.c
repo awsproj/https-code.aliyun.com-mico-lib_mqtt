@@ -65,7 +65,7 @@ void countdown_sec(Timer *timer, uint32_t timeout) {
 	timeradd(&now, &interval, &timer->end_time);
 }
 
-void init_timer(Timer *timer) {
+void mqtt_init_timer(Timer *timer) {
 	timer->end_time = (struct timeval) {0, 0};
 }
 

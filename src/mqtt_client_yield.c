@@ -117,7 +117,7 @@ static IoT_Error_t _mqtt_keep_alive(MQTT_Client *pClient) {
 	}
 
 	/* there is no ping outstanding - send one */
-	init_timer(&timer);
+	mqtt_init_timer(&timer);
 
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 	serialized_len = 0;
@@ -167,7 +167,7 @@ static IoT_Error_t _mqtt_internal_yield(MQTT_Client *pClient, uint32_t timeout_m
 	uint8_t packet_type;
 	ClientState clientState;
 	Timer timer;
-	init_timer(&timer);
+	mqtt_init_timer(&timer);
 	countdown_ms(&timer, timeout_ms);
 
 	FUNC_ENTRY;

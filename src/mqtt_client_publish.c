@@ -188,7 +188,7 @@ static IoT_Error_t _mqtt_internal_publish(MQTT_Client *pClient, const char *pTop
 
 	FUNC_ENTRY;
 
-	init_timer(&timer);
+	mqtt_init_timer(&timer);
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 
 	if(QOS1 == pParams->qos) {

@@ -216,8 +216,8 @@ IoT_Error_t mqtt_init(MQTT_Client *pClient, IoT_Client_Init_Params *pInitParams)
 		FUNC_EXIT_RC(rc);
 	}
 
-	init_timer(&(pClient->pingTimer));
-	init_timer(&(pClient->reconnectDelayTimer));
+	mqtt_init_timer(&(pClient->pingTimer));
+	mqtt_init_timer(&(pClient->reconnectDelayTimer));
 
 	pClient->clientStatus.clientState = CLIENT_STATE_INITIALIZED;
 

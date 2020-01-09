@@ -334,7 +334,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(MQTT_Client *pClient, Time
 	IoT_Error_t rc;
 	MQTTHeader header = {0};
 	Timer packetTimer;
-	init_timer(&packetTimer);
+	mqtt_init_timer(&packetTimer);
 	countdown_ms(&packetTimer, pClient->clientData.packetTimeoutMs);
 
 	len = 0;
@@ -522,7 +522,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(MQTT_Client *pClient, T
 		FUNC_EXIT_RC(rc);
 	}
 
-    init_timer(&timer);
+    mqtt_init_timer(&timer);
     countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 
 	rc = mqtt_internal_send_packet(pClient, len, &timer);

@@ -140,7 +140,7 @@ static IoT_Error_t _mqtt_internal_unsubscribe(MQTT_Client *pClient, const char *
 		FUNC_EXIT_RC(MQTT_FAILURE);
 	}
 
-	init_timer(&timer);
+	mqtt_init_timer(&timer);
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 
 	rc = _mqtt_serialize_unsubscribe(pClient->clientData.writeBuf, pClient->clientData.writeBufSize, 0,
